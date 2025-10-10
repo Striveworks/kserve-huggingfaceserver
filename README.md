@@ -1,6 +1,6 @@
 # Fork of KServe for huggingfaceserver CVE fixes
 
-This is a fork of kserve that serves to document how we build the image:
+This is a fork of kserve that serves to document how we built the image:
 
 ```
 724664234782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0
