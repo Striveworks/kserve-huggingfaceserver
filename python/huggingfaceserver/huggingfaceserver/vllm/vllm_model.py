@@ -96,6 +96,7 @@ class VLLMModel(
                 f"(chose from {{ {','.join(valide_tool_parses)} }})"
             )
 
+        """
         valid_reasoning_parses = ReasoningParserManager.reasoning_parsers.keys()
         if (
             self.args.enable_reasoning
@@ -105,6 +106,7 @@ class VLLMModel(
                 f"invalid reasoning parser: {self.args.reasoning_parser} "
                 f"(chose from {{ {','.join(valid_reasoning_parses)} }})"
             )
+        """
 
         if torch.cuda.is_available():
             self.vllm_engine_args.tensor_parallel_size = torch.cuda.device_count()
@@ -133,7 +135,7 @@ class VLLMModel(
                 model_config=self.model_config,
                 base_model_paths=self.base_model_paths,
                 lora_modules=self.args.lora_modules,
-                prompt_adapters=self.args.prompt_adapters,
+                #prompt_adapters=self.args.prompt_adapters,
             )
             await self.openai_serving_models.init_static_loras()
 
@@ -149,7 +151,7 @@ class VLLMModel(
                     return_tokens_as_token_ids=self.args.return_tokens_as_token_ids,
                     enable_auto_tools=self.args.enable_auto_tool_choice,
                     tool_parser=self.args.tool_call_parser,
-                    reasoning_parser=self.args.reasoning_parser,
+                    #reasoning_parser=self.args.reasoning_parser,
                     enable_prompt_tokens_details=self.args.enable_prompt_tokens_details,
                 )
                 if self.model_config.runner_type == "generate"

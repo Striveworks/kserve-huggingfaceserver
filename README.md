@@ -1,3 +1,43 @@
+# Fork of KServe for huggingfaceserver CVE fixes
+
+This is a fork of kserve that serves to document how we build the image:
+
+```
+724664234782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0
+```
+
+The official image released by kserve had several high and critical CVEs. To build our version, use the `python/huggingface_server.Dockerfile` dockerfile. 
+
+```bash
+$ cd python
+$ docker build -t striveworks/huggingfaceserver:latest -f huggingface_server.Dockerfile .
+```
+
+To test this image for inference, start it via:
+
+```bash
+docker run -p 8080:8080 --gpus all -it -v /root/models/gpt-oss-20b/:/mnt/models   striveworks/huggingfaceserver:latest   --max_length 8000 --quantization mxfp4 --model_name gpt --trust-remote-code --enforce-eager   --enable-auto-tool-choice --tool-call-parser openai --kv-cache-memory=21777640857
+```
+
+where `/root/models/gpt-oss-20b` is a local path to your LLM (in this case, `gpt-oss-20b`). The arguments after the image name are all directly piped into the vLLM engine. See the [vLLM docs](https://docs.vllm.ai/en/stable/configuration/engine_args.html#modelconfig) for details on those.
+
+Once you have that running, you can test inference via cURL:
+
+```bash
+curl -v http://0.0.0.0:8080/openai/v1/chat/completions -H "Content-Type: application/json" -d '{
+  "model": "'gpt'",
+  "messages": [
+    {"role": "system", "content": "You are a helpful assistant that speaks like Shakespeare."},
+    {"role": "user", "content": "Write a poem about colors"}
+  ],
+  "max_tokens": 10000,
+  "stream": false, "reasoning_effort": "low"
+}'
+```
+
+The `reasoning_effort` is not available for all models.
+
+
 # KServe
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/kserve/kserve)
 [![Coverage Status](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/andyi2it/5174bd748ac63a6e4803afea902e9810/raw/coverage.json)](https://github.com/kserve/kserve/actions/workflows/go.yml)
