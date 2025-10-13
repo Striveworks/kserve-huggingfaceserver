@@ -3,7 +3,7 @@
 This is a fork of kserve that serves to document how we built the image:
 
 ```
-724664234782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0
+*******782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0
 ```
 
 The official image released by kserve had several high and critical CVEs. To build our version, use the `python/huggingface_server.Dockerfile` dockerfile. 
