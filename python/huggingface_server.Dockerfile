@@ -13,7 +13,7 @@ ARG PYTHON_VERSION=3.12
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN dnf update -y \
-    && dnf install -y --allowerasing git curl sudo gcc \
+    && dnf install -y --allowerasing git curl sudo gcc gcc-c++ kernel-devel cmake make automake\
     && dnf install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-devel \
     && alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 \
     && alternatives --set python3 /usr/bin/python${PYTHON_VERSION} \
@@ -57,7 +57,7 @@ ARG BITSANDBYTES_VERSION=0.46.1
 ARG FLASHINFER_VERSION=0.2.6.post1
 # Need a separate CUDA arch list for flashinfer because '7.0' is not supported by flashinfer
 ARG FLASHINFER_CUDA_ARCH_LIST="7.5 8.0 8.6 8.9 9.0+PTX"
-ENV TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.9+PTX"
+ENV TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0+PTX"
 
 WORKDIR ${WORKSPACE_DIR}
 
@@ -92,8 +92,8 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install vllm[runai,tensorizer
 # Install lmcache
 #RUN --mount=type=cache,target=/root/.cache/pip pip install lmcache==${LMCACHE_VERSION}
 
-# Install bits and bytes
-RUN --mount=type=cache,target=/root/.cache/pip pip install bitsandbytes==${BITSANDBYTES_VERSION}
+# Install bits and bytes from source (so it uses TORCH_CUDA_ARCH_LIST)
+RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd bitsandbytes/ && cmake -DCOMPUTE_BACKEND=cuda -S . && make && pip install .
 
 # Fix CVE
 RUN pip install "h11>=0.16.0"

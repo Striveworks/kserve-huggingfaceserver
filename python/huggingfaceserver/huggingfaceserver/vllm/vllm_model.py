@@ -236,6 +236,7 @@ class VLLMModel(
         )
 
         if isinstance(response, engineError):
+            response = response.error
             return create_error_response(
                 message=response.message,
                 err_type=response.type,
@@ -261,6 +262,7 @@ class VLLMModel(
         )
 
         if isinstance(response, engineError):
+            response = response.error
             return create_error_response(
                 message=response.message,
                 err_type=response.type,
@@ -286,6 +288,7 @@ class VLLMModel(
         )
 
         if isinstance(response, engineError):
+            response = response.error
             return create_error_response(
                 message=response.message,
                 err_type=response.type,
@@ -309,6 +312,7 @@ class VLLMModel(
         response = await self.serving_reranking.do_rerank(request, raw_request)
 
         if isinstance(response, engineError):
+            response = response.error
             return create_error_response(
                 message=response.message,
                 err_type=response.type,
