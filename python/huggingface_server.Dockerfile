@@ -57,6 +57,7 @@ ARG BITSANDBYTES_VERSION=0.46.1
 ARG FLASHINFER_VERSION=0.2.6.post1
 # Need a separate CUDA arch list for flashinfer because '7.0' is not supported by flashinfer
 ARG FLASHINFER_CUDA_ARCH_LIST="7.5 8.0 8.6 8.9 9.0+PTX"
+ENV TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.9+PTX"
 
 WORKDIR ${WORKSPACE_DIR}
 
@@ -93,6 +94,12 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install vllm[runai,tensorizer
 
 # Install bits and bytes
 RUN --mount=type=cache,target=/root/.cache/pip pip install bitsandbytes==${BITSANDBYTES_VERSION}
+
+# Fix CVE
+RUN pip install "h11>=0.16.0"
+RUN pip install "pillow>=11.3.0"
+RUN pip install "setuptools>=78.1.1"
+RUN pip uninstall -y ray
 
 # Use Bash with `-o pipefail` so we can leverage Bash-specific features (like `[[ … ]]` for glob tests)
 # and ensure that failures in any part of a piped command cause the build to fail immediately.
@@ -177,12 +184,6 @@ ENV VLLM_WORKER_MULTIPROC_METHOD="spawn"
 
 USER 1000
 ENV PYTHONPATH=${WORKSPACE_DIR}/huggingfaceserver
-RUN pip uninstall -y torchvision
-RUN pip install --no-cache-dir torch torchvision
-# Fix CVE
-RUN pip install "h11>=0.16.0"
-RUN pip install "pillow>=11.3.0"
-RUN pip install "setuptools>=78.1.1"
-RUN pip uninstall -y ray
+
 ENTRYPOINT ["python3", "-m", "huggingfaceserver"]
 #################### PROD IMAGE ####################
