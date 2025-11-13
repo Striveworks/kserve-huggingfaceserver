@@ -37,6 +37,22 @@ curl -v http://0.0.0.0:8080/openai/v1/chat/completions -H "Content-Type: applica
 
 The `reasoning_effort` is not available for all models.
 
+## SHA256 fix
+
+The image:
+
+```
+**********782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0.sha256.1
+```
+
+is a temporary workaround to allow vLLM to work in FIPS constrained environments, where `hashlib.md5` is disabled. This image was made by first building the one above, and then exec-ing into it and running the following commands:
+
+```bash
+$ cd /kserve-workspace/prod_venv/lib64/python3.12/site-packages/vllm/
+$ find . -type f -exec sed -i 's/hashlib\.md5/hashlib.sha256/g' {} +
+```
+
+This replaces all `hashlib.md5` calls with `hashlib.sha256`. Once that change is made inside the container, that running image is committed so the changes persist.
 
 # KServe
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/kserve/kserve)
