@@ -12,7 +12,7 @@ ARG CUDA_VERSION=12.8.1
 ARG PYTHON_VERSION=3.12
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN dnf update -y \
+RUN dnf update -y --nobest \
     && dnf install -y --allowerasing git curl sudo gcc gcc-c++ kernel-devel cmake make automake\
     && dnf install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-devel \
     && alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 \
@@ -99,6 +99,7 @@ RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd 
 RUN pip install "h11>=0.16.0"
 RUN pip install "pillow>=11.3.0"
 RUN pip install "setuptools>=78.1.1"
+RUN pip install "aiohttp>=3.12.14"
 RUN pip uninstall -y ray
 
 # Use Bash with `-o pipefail` so we can leverage Bash-specific features (like `[[ … ]]` for glob tests)
