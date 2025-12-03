@@ -5,7 +5,7 @@ ARG WORKSPACE_DIR=/kserve-workspace
 
 #################### BASE BUILD IMAGE ####################
 # prepare basic build environment
-FROM nvidia/cuda:${CUDA_VERSION}-devel-rockylinux9 AS base
+FROM docker.io/nvidia/cuda:${CUDA_VERSION}-devel-rockylinux9 AS base
 
 ARG WORKSPACE_DIR
 ARG CUDA_VERSION=12.8.1
@@ -13,13 +13,14 @@ ARG PYTHON_VERSION=3.12
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN dnf update -y --nobest \
-    && dnf install -y --allowerasing git curl sudo gcc gcc-c++ kernel-devel cmake make automake\
+    && dnf install -y --allowerasing git curl sudo gcc gcc-c++ kernel-devel cmake make automake \
     && dnf install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-devel \
     && alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 \
     && alternatives --set python3 /usr/bin/python${PYTHON_VERSION} \
     && alternatives --install /usr/bin/python python /usr/bin/python3 1 \
     && ln -sf /usr/bin/python${PYTHON_VERSION}-config /usr/bin/python3-config \
     && curl -sS https://bootstrap.pypa.io/get-pip.py | python${PYTHON_VERSION} \
+    && python3 -m pip install --upgrade pip \
     && python3 --version && python3 -m pip --version \
     && dnf clean all && rm -rf /var/cache/dnf
 
@@ -51,7 +52,7 @@ WORKDIR ${WORKSPACE_DIR}
 FROM base AS build
 
 ARG WORKSPACE_DIR
-ARG VLLM_VERSION=0.11.0
+ARG VLLM_VERSION=0.11.1
 ARG LMCACHE_VERSION=0.3.0
 ARG BITSANDBYTES_VERSION=0.46.1
 ARG FLASHINFER_VERSION=0.2.6.post1
@@ -95,11 +96,11 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install vllm[runai,tensorizer
 # Install bits and bytes from source (so it uses TORCH_CUDA_ARCH_LIST)
 RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd bitsandbytes/ && cmake -DCOMPUTE_BACKEND=cuda -S . && make && pip install .
 
+####################################
 # Fix CVE
-RUN pip install "h11>=0.16.0"
-RUN pip install "pillow>=11.3.0"
 RUN pip install "setuptools>=78.1.1"
-RUN pip install "aiohttp>=3.12.14"
+RUN pip install "urllib3>=2.5.0" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.12.14"
+RUN pip install "h11>=0.16.0" "pillow>=11.3.0"
 RUN pip uninstall -y ray
 
 # Use Bash with `-o pipefail` so we can leverage Bash-specific features (like `[[ … ]]` for glob tests)
@@ -128,7 +129,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 #################### WHEEL BUILD IMAGE ####################
 
 #################### PROD IMAGE ####################
-FROM nvidia/cuda:${CUDA_VERSION}-runtime-rockylinux9 AS prod
+FROM docker.io/nvidia/cuda:${CUDA_VERSION}-runtime-rockylinux9 AS prod
 
 ARG WORKSPACE_DIR
 ARG CUDA_VERSION=12.8.1
@@ -143,6 +144,7 @@ RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/rocky*.repo \
     && dnf clean all
 
 # Install Python and other dependencies
+# NOTE: no pip.  Update for CVEs in this layer
 RUN dnf update -y \
     && dnf install -y --allowerasing git curl sudo gcc \
     && dnf install -y python${PYTHON_VERSION} python${PYTHON_VERSION}-devel \
@@ -150,11 +152,9 @@ RUN dnf update -y \
     && alternatives --set python3 /usr/bin/python${PYTHON_VERSION} \
     && alternatives --install /usr/bin/python python /usr/bin/python3 1 \
     && ln -sf /usr/bin/python${PYTHON_VERSION}-config /usr/bin/python3-config \
-    && curl -sS https://bootstrap.pypa.io/get-pip.py | python${PYTHON_VERSION} \
-    && python3 --version && python3 -m pip --version \
+    && python3 --version \
+    && dnf install -y --allowerasing sqlite-libs expat shadow-utils \
     && dnf clean all && rm -rf /var/cache/dnf
-# Fix cve
-RUN dnf update -y expat && dnf clean all
 
 
 ARG VENV_PATH
@@ -183,8 +183,20 @@ ENV VLLM_NCCL_SO_PATH="/lib/x86_64-linux-gnu/libnccl.so.2"
 # Set the multiprocess method to spawn to avoid issues with cuda initialization for `mp` executor backend.
 ENV VLLM_WORKER_MULTIPROC_METHOD="spawn"
 
+###################################################
+###################################################
+###################################################
+# SHA256 FIPS fix
+RUN find /kserve-workspace/prod_venv/lib64/python3.12/site-packages/vllm/ -type f -exec sed -i 's/hashlib\.md5/hashlib.sha256/g' {} +;
+###################################################
+###################################################
+###################################################
+
 USER 1000
 ENV PYTHONPATH=${WORKSPACE_DIR}/huggingfaceserver
 
 ENTRYPOINT ["python3", "-m", "huggingfaceserver"]
 #################### PROD IMAGE ####################
+
+
+
