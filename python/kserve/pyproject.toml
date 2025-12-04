@@ -5,7 +5,7 @@ authors = [
     {name = "The KServe Authors", email = "hejinchi@cn.ibm.com"},
 ]
 license = {text = "Apache-2.0"}
-requires-python = "<3.13,>=3.9"
+requires-python = "<3.13,>=3.10"
 dependencies = [
     "uvicorn[standard]<1.0.0,>=0.30.6",
     "fastapi>=0.115.3",
@@ -64,7 +64,7 @@ ray = [
     "ray[serve]>=2.43.0",
 ]
 llm = [
-    "vllm==0.11.0",
+    "vllm==0.11.1",
 ]
 
 [dependency-groups]

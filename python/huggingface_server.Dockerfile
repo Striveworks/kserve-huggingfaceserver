@@ -192,6 +192,14 @@ RUN find /kserve-workspace/prod_venv/lib64/python3.12/site-packages/vllm/ -type 
 ###################################################
 ###################################################
 
+
+# Download harmony artifacts
+ENV TIKTOKEN_ENCODINGS_BASE="/kserve-workspace/encodings"
+RUN mkdir $TIKTOKEN_ENCODINGS_BASE
+RUN cd $TIKTOKEN_ENCODINGS_BASE && curl -O https://openaipublic.blob.core.windows.net/encodings/o200k_base.tiktoken
+RUN cd $TIKTOKEN_ENCODINGS_BASE && curl -O https://openaipublic.blob.core.windows.net/encodings/cl100k_base.tiktoken
+
+
 USER 1000
 ENV PYTHONPATH=${WORKSPACE_DIR}/huggingfaceserver
 
