@@ -24,8 +24,8 @@ from vllm.entrypoints.logger import RequestLogger
 from vllm.engine.protocol import EngineClient
 from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
 from vllm.entrypoints.openai.serving_chat import OpenAIServingChat
-from vllm.entrypoints.openai.serving_embedding import OpenAIServingEmbedding
-from vllm.entrypoints.openai.serving_score import ServingScores
+from vllm.entrypoints.pooling.embed.serving import OpenAIServingEmbedding
+from vllm.entrypoints.pooling.score.serving import ServingScores
 from vllm.entrypoints.openai.tool_parsers import ToolParserManager
 from vllm.entrypoints.openai.serving_models import BaseModelPath, OpenAIServingModels
 from vllm.entrypoints.openai.cli_args import validate_parsed_serve_args
@@ -86,17 +86,17 @@ class VLLMModel(
         if self.args.tool_parser_plugin and len(self.args.tool_parser_plugin) > 3:
             ToolParserManager.import_tool_parser(self.args.tool_parser_plugin)
 
+        """
         valide_tool_parses = ToolParserManager.tool_parsers.keys()
         if (
             self.args.enable_auto_tool_choice
             and self.args.tool_call_parser not in valide_tool_parses
-        ):
+        ):      
             raise KeyError(
                 f"invalid tool call parser: {self.args.tool_call_parser} "
                 f"(chose from {{ {','.join(valide_tool_parses)} }})"
             )
 
-        """
         valid_reasoning_parses = ReasoningParserManager.reasoning_parsers.keys()
         if (
             self.args.enable_reasoning
@@ -126,23 +126,20 @@ class VLLMModel(
             ]
 
             self.log_stats = not self.args.disable_log_stats
-            self.model_config = await self.engine_client.get_model_config()
+            self.model_config = self.engine_client.model_config
 
             resolved_chat_template = load_chat_template(self.args.chat_template)
 
             self.openai_serving_models = OpenAIServingModels(
                 engine_client=self.engine_client,
-                model_config=self.model_config,
                 base_model_paths=self.base_model_paths,
                 lora_modules=self.args.lora_modules,
-                #prompt_adapters=self.args.prompt_adapters,
             )
             await self.openai_serving_models.init_static_loras()
 
             self.openai_serving_chat = (
                 OpenAIServingChat(
                     self.engine_client,
-                    self.model_config,
                     self.openai_serving_models,
                     self.args.response_role,
                     request_logger=self.request_logger,
@@ -151,7 +148,7 @@ class VLLMModel(
                     return_tokens_as_token_ids=self.args.return_tokens_as_token_ids,
                     enable_auto_tools=self.args.enable_auto_tool_choice,
                     tool_parser=self.args.tool_call_parser,
-                    #reasoning_parser=self.args.reasoning_parser,
+                    reasoning_parser=self.args.reasoning_parser,
                     enable_prompt_tokens_details=self.args.enable_prompt_tokens_details,
                 )
                 if self.model_config.runner_type == "generate"
@@ -161,7 +158,6 @@ class VLLMModel(
             self.openai_serving_completion = (
                 OpenAIServingCompletion(
                     self.engine_client,
-                    self.model_config,
                     self.openai_serving_models,
                     request_logger=self.request_logger,
                     return_tokens_as_token_ids=self.args.return_tokens_as_token_ids,
@@ -173,7 +169,6 @@ class VLLMModel(
             self.openai_serving_embedding = (
                 OpenAIServingEmbedding(
                     self.engine_client,
-                    self.model_config,
                     self.openai_serving_models,
                     request_logger=self.request_logger,
                     chat_template=resolved_chat_template,
@@ -186,7 +181,6 @@ class VLLMModel(
             self.serving_reranking = (
                 ServingScores(
                     self.engine_client,
-                    self.model_config,
                     self.openai_serving_models,
                     request_logger=self.request_logger,
                 )
@@ -206,13 +200,7 @@ class VLLMModel(
 
     def stop_engine(self):
         if self.engine_client:
-            # V1 AsyncLLM
-            if envs.VLLM_USE_V1:
-                self.engine_client.shutdown()
-
-            # V0 AsyncLLMEngine
-            else:
-                self.engine_client.shutdown_background_loop()
+            self.engine_client.shutdown()
         self.ready = False
 
     async def healthy(self) -> bool:

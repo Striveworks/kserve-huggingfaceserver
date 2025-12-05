@@ -52,7 +52,7 @@ WORKDIR ${WORKSPACE_DIR}
 FROM base AS build
 
 ARG WORKSPACE_DIR
-ARG VLLM_VERSION=0.11.1
+ARG VLLM_VERSION=0.12.0
 ARG LMCACHE_VERSION=0.3.0
 ARG BITSANDBYTES_VERSION=0.46.1
 ARG FLASHINFER_VERSION=0.2.6.post1
@@ -182,16 +182,6 @@ ENV VLLM_NCCL_SO_PATH="/lib/x86_64-linux-gnu/libnccl.so.2"
 # https://github.com/vllm-project/vllm/issues/6152
 # Set the multiprocess method to spawn to avoid issues with cuda initialization for `mp` executor backend.
 ENV VLLM_WORKER_MULTIPROC_METHOD="spawn"
-
-###################################################
-###################################################
-###################################################
-# SHA256 FIPS fix
-RUN find /kserve-workspace/prod_venv/lib64/python3.12/site-packages/vllm/ -type f -exec sed -i 's/hashlib\.md5/hashlib.sha256/g' {} +;
-###################################################
-###################################################
-###################################################
-
 
 # Download harmony artifacts
 ENV TIKTOKEN_ENCODINGS_BASE="/kserve-workspace/encodings"
