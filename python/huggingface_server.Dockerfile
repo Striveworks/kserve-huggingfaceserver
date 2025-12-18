@@ -101,7 +101,7 @@ RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd 
 RUN pip install "setuptools>=78.1.1"
 RUN pip install "urllib3>=2.5.0" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.12.14"
 RUN pip install "h11>=0.16.0" "pillow>=11.3.0"
-RUN pip uninstall -y ray
+RUN pip uninstall -y ray && pip install --upgrade pip
 
 # Use Bash with `-o pipefail` so we can leverage Bash-specific features (like `[[ … ]]` for glob tests)
 # and ensure that failures in any part of a piped command cause the build to fail immediately.
@@ -163,7 +163,8 @@ ENV VIRTUAL_ENV=${WORKSPACE_DIR}/${VENV_PATH}
 ENV PATH="${WORKSPACE_DIR}/${VENV_PATH}/bin:$PATH"
 
 # Create non-root user
-RUN useradd kserve -m -u 1000 -d /home/kserve
+ENV STRIVE_UID=1000
+RUN useradd kserve -m -u $STRIVE_UID -d /home/kserve
 
 #COPY --from=build --chown=kserve:kserve ${WORKSPACE_DIR}/third_party third_party
 COPY --from=build --chown=kserve:kserve ${WORKSPACE_DIR}/$VENV_PATH $VENV_PATH
@@ -183,11 +184,36 @@ ENV VLLM_NCCL_SO_PATH="/lib/x86_64-linux-gnu/libnccl.so.2"
 # Set the multiprocess method to spawn to avoid issues with cuda initialization for `mp` executor backend.
 ENV VLLM_WORKER_MULTIPROC_METHOD="spawn"
 
+
+# ssl ownership
+RUN mkdir -p /etc/pki/ca-trust/extracted/pem/directory-hash /etc/ssl/certs /usr/local/share \
+        /usr/local/lib/python${PYTHON_VERSION}/site-packages/certifi/ && \
+    chown $STRIVE_UID -R /usr/share/pki/ca-trust-source /etc/pki/ca-trust/extracted \
+        /usr/local/lib/python${PYTHON_VERSION}/site-packages/certifi/ \
+        /etc/pki/ca-trust/extracted/pem/directory-hash /etc/ssl /etc/ssl/certs && \
+    chmod a+rwx -R /etc/pki/ca-trust/extracted/pem/directory-hash \
+        /usr/share/pki/ca-trust-source /etc/pki/ca-trust/extracted \
+        /usr/local/lib/python${PYTHON_VERSION}/site-packages/certifi/ \
+        /etc/ssl /etc/ssl/certs
+
+# ssl symlinking
+RUN sed -i 's/DEST=\/etc\/pki\/ca-trust\/extracted/DEST=\/etc\/ssl/g' /usr/bin/update-ca-trust && \
+    sed -i 's/USER_DEST=$2/USER_DEST=/g' /usr/bin/update-ca-trust && \
+    sed -i 's/USER_DEST=/USER_DEST=\/etc\/ssl/g' /usr/bin/update-ca-trust && \
+    ln -s /usr/bin/update-ca-trust /usr/bin/update-ca-certificates && \
+    ln -s /usr/share/pki/ca-trust-source/anchors /usr/local/share/ca-certificates && \
+    chown $STRIVE_UID -R /usr/local/share/ca-certificates && chmod a+rwx -R /usr/local/share/ca-certificates && \
+    ln -s /etc/ssl/pem/tls-ca-bundle.pem /etc/ssl/certs/ca-certificates.crt
+
+RUN /kserve-workspace/prod_venv/bin/pip --version && \
+    /kserve-workspace/prod_venv/bin/pip install --upgrade pip && \
+    /kserve-workspace/prod_venv/bin/pip --version
+
 ###################################################
 ###################################################
 ###################################################
 # SHA256 FIPS fix
-RUN find /kserve-workspace/prod_venv/lib64/python3.12/site-packages/vllm/ -type f -exec sed -i 's/hashlib\.md5/hashlib.sha256/g' {} +;
+RUN find /kserve-workspace/prod_venv/lib64/python${PYTHON_VERSION}/site-packages/vllm/ -type f -exec sed -i 's/hashlib\.md5/hashlib.sha256/g' {} +;
 ###################################################
 ###################################################
 ###################################################
