@@ -174,7 +174,7 @@ class VLLMModel(
                     chat_template=resolved_chat_template,
                     chat_template_content_format=self.args.chat_template_content_format,
                 )
-                if self.model_config.task == "embed"
+                if self.model_config.runner_type == "embed"
                 else None
             )
 
@@ -184,7 +184,7 @@ class VLLMModel(
                     self.openai_serving_models,
                     request_logger=self.request_logger,
                 )
-                if self.model_config.task == "classify"
+                if self.model_config.runner_type == "classify"
                 else None
             )
 

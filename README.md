@@ -1,9 +1,9 @@
 # Fork of KServe for huggingfaceserver CVE fixes
 
-This is a fork of kserve that serves to document how we built the image:
+This is a fork of kserve that serves to document how we built the images:
 
 ```
-*******782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0
+*******782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0*
 ```
 
 The official image released by kserve had several high and critical CVEs. To build our version, use the `python/huggingface_server.Dockerfile` dockerfile. 
@@ -37,22 +37,18 @@ curl -v http://0.0.0.0:8080/openai/v1/chat/completions -H "Content-Type: applica
 
 The `reasoning_effort` is not available for all models.
 
-## SHA256 fix
+# Updating vLLM version
 
-The image:
+To update the vLLM version, edit  the following files:
 
 ```
-**********782.dkr.ecr.us-east-1.amazonaws.com/library/kserve-huggingfaceserver:v0.16.0.sha256.1
+python/huggingface_server.Dockerfile # (VLLM_VERSION arg)
+python/huggingfaceserver/pyproject.toml
+python/kserve/pyproject.toml
 ```
 
-is a temporary workaround to allow vLLM to work in FIPS constrained environments, where `hashlib.md5` is disabled. This image was made by first building the one above, and then exec-ing into it and running the following commands:
+Make sure you test your builds before deploying them after updating vLLM's version. The vLLM project is known to sometimes shuffle stuff internally and that can break kserve's vllm usage patterns.
 
-```bash
-$ cd /kserve-workspace/prod_venv/lib64/python3.12/site-packages/vllm/
-$ find . -type f -exec sed -i 's/hashlib\.md5/hashlib.sha256/g' {} +
-```
-
-This replaces all `hashlib.md5` calls with `hashlib.sha256`. Once that change is made inside the container, that running image is committed so the changes persist.
 
 # KServe
 [![go.dev reference](https://img.shields.io/badge/go.dev-reference-007d9c?logo=go&logoColor=white)](https://pkg.go.dev/github.com/kserve/kserve)
