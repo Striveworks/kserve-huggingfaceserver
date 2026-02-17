@@ -19,7 +19,6 @@ from http import HTTPStatus
 import torch
 from fastapi import Request
 from vllm import AsyncEngineArgs
-import vllm.envs as envs
 from vllm.entrypoints.logger import RequestLogger
 from vllm.engine.protocol import EngineClient
 from vllm.entrypoints.openai.serving_completion import OpenAIServingCompletion
@@ -29,7 +28,7 @@ from vllm.entrypoints.pooling.score.serving import ServingScores
 from vllm.entrypoints.openai.tool_parsers import ToolParserManager
 from vllm.entrypoints.openai.serving_models import BaseModelPath, OpenAIServingModels
 from vllm.entrypoints.openai.cli_args import validate_parsed_serve_args
-from vllm.entrypoints.chat_utils import load_chat_template
+from vllm.entrypoints.utils import process_chat_template
 from vllm.entrypoints.openai.protocol import ErrorResponse as engineError
 from vllm.reasoning import ReasoningParserManager
 
@@ -87,24 +86,23 @@ class VLLMModel(
             ToolParserManager.import_tool_parser(self.args.tool_parser_plugin)
 
         """
-        valide_tool_parses = ToolParserManager.tool_parsers.keys()
+        valid_tool_parsers = ToolParserManager.list_registered()
         if (
             self.args.enable_auto_tool_choice
-            and self.args.tool_call_parser not in valide_tool_parses
-        ):      
-            raise KeyError(
-                f"invalid tool call parser: {self.args.tool_call_parser} "
-                f"(chose from {{ {','.join(valide_tool_parses)} }})"
-            )
-
-        valid_reasoning_parses = ReasoningParserManager.reasoning_parsers.keys()
-        if (
-            self.args.enable_reasoning
-            and self.args.reasoning_parser not in valid_reasoning_parses
+            and self.args.tool_call_parser not in valid_tool_parsers
         ):
             raise KeyError(
-                f"invalid reasoning parser: {self.args.reasoning_parser} "
-                f"(chose from {{ {','.join(valid_reasoning_parses)} }})"
+                f"invalid tool call parser: {self.args.tool_call_parser} "
+                f"(chose from {{ {','.join(valid_tool_parsers)} }})"
+            )
+
+        valid_reasoning_parsers = ReasoningParserManager.list_registered()
+        if (
+            reasoning_parser := self.args.structured_outputs_config.reasoning_parser
+        ) and reasoning_parser not in valid_reasoning_parsers:
+            raise KeyError(
+                f"invalid reasoning parser: {reasoning_parser} "
+                f"(chose from {{ {','.join(valid_reasoning_parsers)} }})"
             )
         """
 
@@ -115,6 +113,8 @@ class VLLMModel(
             self.vllm_engine_args, self.args.disable_frontend_multiprocessing
         ) as engine_client:
             self.engine_client = engine_client
+            vllm_config = self.engine_client.vllm_config
+
             if self.args.served_model_name is not None:
                 served_model_names = self.args.served_model_name
             else:
@@ -126,9 +126,18 @@ class VLLMModel(
             ]
 
             self.log_stats = not self.args.disable_log_stats
+<<<<<<< HEAD
             self.model_config = self.engine_client.model_config
+=======
+            self.model_config = vllm_config.model_config
+>>>>>>> upstream/master
 
-            resolved_chat_template = load_chat_template(self.args.chat_template)
+            # Get supported tasks from engine
+            supported_tasks = await self.engine_client.get_supported_tasks()
+
+            resolved_chat_template = await process_chat_template(
+                self.args.chat_template, self.engine_client, self.model_config
+            )
 
             self.openai_serving_models = OpenAIServingModels(
                 engine_client=self.engine_client,
@@ -145,13 +154,18 @@ class VLLMModel(
                     request_logger=self.request_logger,
                     chat_template=resolved_chat_template,
                     chat_template_content_format=self.args.chat_template_content_format,
+                    trust_request_chat_template=self.args.trust_request_chat_template,
                     return_tokens_as_token_ids=self.args.return_tokens_as_token_ids,
                     enable_auto_tools=self.args.enable_auto_tool_choice,
+                    exclude_tools_when_tool_choice_none=self.args.exclude_tools_when_tool_choice_none,
                     tool_parser=self.args.tool_call_parser,
-                    reasoning_parser=self.args.reasoning_parser,
+                    reasoning_parser=self.args.structured_outputs_config.reasoning_parser,
                     enable_prompt_tokens_details=self.args.enable_prompt_tokens_details,
+                    enable_force_include_usage=self.args.enable_force_include_usage,
+                    enable_log_outputs=self.args.enable_log_outputs,
+                    log_error_stack=self.args.log_error_stack,
                 )
-                if self.model_config.runner_type == "generate"
+                if "generate" in supported_tasks
                 else None
             )
 
@@ -161,8 +175,11 @@ class VLLMModel(
                     self.openai_serving_models,
                     request_logger=self.request_logger,
                     return_tokens_as_token_ids=self.args.return_tokens_as_token_ids,
+                    enable_prompt_tokens_details=self.args.enable_prompt_tokens_details,
+                    enable_force_include_usage=self.args.enable_force_include_usage,
+                    log_error_stack=self.args.log_error_stack,
                 )
-                if self.model_config.runner_type == "generate"
+                if "generate" in supported_tasks
                 else None
             )
 
@@ -173,8 +190,14 @@ class VLLMModel(
                     request_logger=self.request_logger,
                     chat_template=resolved_chat_template,
                     chat_template_content_format=self.args.chat_template_content_format,
+                    trust_request_chat_template=self.args.trust_request_chat_template,
+                    log_error_stack=self.args.log_error_stack,
                 )
+<<<<<<< HEAD
                 if self.model_config.runner_type == "embed"
+=======
+                if "embed" in supported_tasks
+>>>>>>> upstream/master
                 else None
             )
 
@@ -183,8 +206,13 @@ class VLLMModel(
                     self.engine_client,
                     self.openai_serving_models,
                     request_logger=self.request_logger,
+                    log_error_stack=self.args.log_error_stack,
                 )
+<<<<<<< HEAD
                 if self.model_config.runner_type == "classify"
+=======
+                if ("embed" in supported_tasks or "score" in supported_tasks)
+>>>>>>> upstream/master
                 else None
             )
 
@@ -200,6 +228,10 @@ class VLLMModel(
 
     def stop_engine(self):
         if self.engine_client:
+<<<<<<< HEAD
+=======
+            # V1 AsyncLLM only (V0 is deprecated)
+>>>>>>> upstream/master
             self.engine_client.shutdown()
         self.ready = False
 
@@ -226,10 +258,10 @@ class VLLMModel(
         if isinstance(response, engineError):
             response = response.error
             return create_error_response(
-                message=response.message,
-                err_type=response.type,
-                param=response.param,
-                status_code=HTTPStatus(response.code),
+                message=response.error.message,
+                err_type=response.error.type,
+                param=getattr(response.error, "param", None),
+                status_code=HTTPStatus(response.error.code),
             )
 
         return response
@@ -252,10 +284,10 @@ class VLLMModel(
         if isinstance(response, engineError):
             response = response.error
             return create_error_response(
-                message=response.message,
-                err_type=response.type,
-                param=response.param,
-                status_code=HTTPStatus(response.code),
+                message=response.error.message,
+                err_type=response.error.type,
+                param=getattr(response.error, "param", None),
+                status_code=HTTPStatus(response.error.code),
             )
 
         return response
@@ -278,10 +310,10 @@ class VLLMModel(
         if isinstance(response, engineError):
             response = response.error
             return create_error_response(
-                message=response.message,
-                err_type=response.type,
-                param=response.param,
-                status_code=HTTPStatus(response.code),
+                message=response.error.message,
+                err_type=response.error.type,
+                param=getattr(response.error, "param", None),
+                status_code=HTTPStatus(response.error.code),
             )
 
         return response
@@ -302,10 +334,10 @@ class VLLMModel(
         if isinstance(response, engineError):
             response = response.error
             return create_error_response(
-                message=response.message,
-                err_type=response.type,
-                param=response.param,
-                status_code=HTTPStatus(response.code),
+                message=response.error.message,
+                err_type=response.error.type,
+                param=getattr(response.error, "param", None),
+                status_code=HTTPStatus(response.error.code),
             )
 
         return response

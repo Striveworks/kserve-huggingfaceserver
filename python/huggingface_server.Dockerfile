@@ -1,4 +1,4 @@
-ARG CUDA_VERSION=12.8.1
+ARG CUDA_VERSION=12.9.1
 ARG VENV_PATH=prod_venv
 ARG PYTHON_VERSION=3.12
 ARG WORKSPACE_DIR=/kserve-workspace
@@ -8,7 +8,7 @@ ARG WORKSPACE_DIR=/kserve-workspace
 FROM docker.io/nvidia/cuda:${CUDA_VERSION}-devel-rockylinux9 AS base
 
 ARG WORKSPACE_DIR
-ARG CUDA_VERSION=12.8.1
+ARG CUDA_VERSION=12.9.1
 ARG PYTHON_VERSION=3.12
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -59,6 +59,7 @@ ARG FLASHINFER_VERSION=0.2.6.post1
 # Need a separate CUDA arch list for flashinfer because '7.0' is not supported by flashinfer
 ARG FLASHINFER_CUDA_ARCH_LIST="7.5 8.0 8.6 8.9 9.0+PTX"
 ENV TORCH_CUDA_ARCH_LIST="7.0;7.5;8.0;8.6;8.9;9.0+PTX"
+
 
 WORKDIR ${WORKSPACE_DIR}
 
@@ -133,7 +134,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 FROM docker.io/nvidia/cuda:${CUDA_VERSION}-runtime-rockylinux9 AS prod
 
 ARG WORKSPACE_DIR
-ARG CUDA_VERSION=12.8.1
+ARG CUDA_VERSION=12.9.1
 ARG PYTHON_VERSION=3.12
 ENV DEBIAN_FRONTEND=noninteractive
 

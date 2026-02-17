@@ -29,7 +29,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/utils/ptr"
 	knapis "knative.dev/pkg/apis"
-	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/network"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -134,7 +133,7 @@ func createHTTPRouteRule(routeMatches []gwapiv1.HTTPRouteMatch, filters []gwapiv
 						Kind:      ptr.To(gwapiv1.Kind(constants.ServiceKind)),
 						Name:      gwapiv1.ObjectName(serviceName),
 						Namespace: (*gwapiv1.Namespace)(&namespace),
-						Port:      (*gwapiv1.PortNumber)(&port),
+						Port:      &port,
 					},
 				},
 			},
@@ -908,12 +907,9 @@ func (r *RawHTTPRouteReconciler) Reconcile(ctx context.Context, isvc *v1beta1.In
 	if isvc.Status.URL, err = createRawURL(isvc, r.ingressConfig); err != nil {
 		return ctrl.Result{}, err
 	}
-	isvc.Status.Address = &duckv1.Addressable{
-		URL: &knapis.URL{
-			Host:   getRawServiceHost(isvc),
-			Scheme: r.ingressConfig.UrlScheme,
-			Path:   "",
-		},
+	isvc.Status.Address, err = createAddress(ctx, r.client, isvc, r.ingressConfig)
+	if err != nil {
+		return ctrl.Result{}, err
 	}
 	return ctrl.Result{}, nil
 }

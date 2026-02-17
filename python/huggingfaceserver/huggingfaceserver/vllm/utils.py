@@ -20,9 +20,7 @@ from contextlib import asynccontextmanager
 from kserve.logging import logger
 
 try:
-    import vllm.envs as envs
     from vllm.engine.arg_utils import AsyncEngineArgs
-    from vllm.engine.async_llm_engine import AsyncLLMEngine
     from vllm.engine.protocol import EngineClient
     from vllm.entrypoints.openai.cli_args import make_arg_parser
     from vllm.model_executor.models import ModelRegistry
@@ -86,7 +84,6 @@ async def build_async_engine_client_from_engine_args(
     usage_context = UsageContext.OPENAI_API_SERVER
     vllm_config = engine_args.create_engine_config(usage_context=usage_context)
 
-    # V1 AsyncLLM.
     if disable_frontend_multiprocessing:
         logger.warning(
             "V1 is enabled, but got --disable-frontend-multiprocessing. "
@@ -100,7 +97,7 @@ async def build_async_engine_client_from_engine_args(
         async_llm = AsyncLLM.from_vllm_config(
             vllm_config=vllm_config,
             usage_context=usage_context,
-            enable_log_requests=engine_args.enable_log_requests,
+            disable_log_requests=engine_args.disable_log_requests,
             disable_log_stats=engine_args.disable_log_stats,
         )
         yield async_llm

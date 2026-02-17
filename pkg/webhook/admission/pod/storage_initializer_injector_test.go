@@ -503,13 +503,13 @@ func TestStorageInitializerInjector(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"s3://my-bucket/foo/bar", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name:  credentials.StorageOverrideConfigEnvKey,
 									Value: `{"bucket":"my-bucket","type":"s3"}`,
 								},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -788,9 +788,6 @@ func TestCredentialInjection(t *testing.T) {
 								},
 							},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -821,6 +818,9 @@ func TestCredentialInjection(t *testing.T) {
 									Name:  s3.AWSEndpointUrl,
 									Value: "https://s3.aws.com",
 								},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 						},
 					},
@@ -896,13 +896,13 @@ func TestCredentialInjection(t *testing.T) {
 								},
 							},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name:  gcs.GCSCredentialEnvKey,
 									Value: gcs.GCSCredentialVolumeMountPath + "gcloud-application-credentials.json",
 								},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 						},
 					},
@@ -987,9 +987,6 @@ func TestCredentialInjection(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"s3://my-bucket/foo/bar", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: credentials.StorageConfigEnvKey,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1003,6 +1000,9 @@ func TestCredentialInjection(t *testing.T) {
 									Name:  credentials.StorageOverrideConfigEnvKey,
 									Value: `{"some-param":"some-val"}`,
 								},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -1085,9 +1085,6 @@ func TestCredentialInjection(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"s3://my-bucket/foo/bar", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: credentials.StorageConfigEnvKey,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1101,6 +1098,9 @@ func TestCredentialInjection(t *testing.T) {
 									Name:  credentials.StorageOverrideConfigEnvKey,
 									Value: `{"some-param":"some-val"}`,
 								},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -1449,9 +1449,6 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"gs://foo", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1474,6 +1471,9 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 										},
 									},
 								},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -1553,9 +1553,6 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"gs://foo", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1580,6 +1577,9 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 								},
 								{Name: "CA_BUNDLE_CONFIGMAP_NAME", Value: constants.DefaultGlobalCaBundleConfigMapName},
 								{Name: "CA_BUNDLE_VOLUME_MOUNT_POINT", Value: "/etc/ssl/custom-certs"},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -1676,9 +1676,6 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"gs://foo", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1704,6 +1701,9 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 								{Name: "AWS_CA_BUNDLE_CONFIGMAP", Value: "cabundle-annotation"},
 								{Name: "CA_BUNDLE_CONFIGMAP_NAME", Value: "cabundle-annotation"},
 								{Name: "CA_BUNDLE_VOLUME_MOUNT_POINT", Value: "/etc/ssl/custom-certs"},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -1801,9 +1801,6 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"gs://foo", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1829,6 +1826,9 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 								{Name: "AWS_CA_BUNDLE_CONFIGMAP", Value: "cabundle-annotation"},
 								{Name: "CA_BUNDLE_CONFIGMAP_NAME", Value: "cabundle-annotation"},
 								{Name: "CA_BUNDLE_VOLUME_MOUNT_POINT", Value: "/etc/ssl/custom-certs"},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -1919,9 +1919,6 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"gs://foo", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -1945,6 +1942,9 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 									},
 								},
 								{Name: "AWS_CA_BUNDLE", Value: "/path/to/ca.crt"},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -2028,9 +2028,6 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 							Image: constants.StorageInitializerContainerImage + ":" + constants.StorageInitializerContainerImageVersion,
 							Args:  []string{"gs://foo", constants.DefaultModelLocalMountPath},
 							Env: []corev1.EnvVar{
-								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
-								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
-								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 								{
 									Name: s3.AWSAccessKeyId,
 									ValueFrom: &corev1.EnvVarSource{
@@ -2056,6 +2053,9 @@ func TestCaBundleConfigMapVolumeMountInStorageInitializer(t *testing.T) {
 								{Name: "AWS_CA_BUNDLE", Value: "/annotation/path/to/annotation-ca.crt"},
 								{Name: "CA_BUNDLE_CONFIGMAP_NAME", Value: constants.DefaultGlobalCaBundleConfigMapName},
 								{Name: "CA_BUNDLE_VOLUME_MOUNT_POINT", Value: "/annotation/path/to"},
+								{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+								{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+								{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
 							},
 							Resources:                resourceRequirement,
 							TerminationMessagePolicy: "FallbackToLogsOnError",
@@ -4499,5 +4499,500 @@ func TestCommonStorageInitializationErrorCases(t *testing.T) {
 				require.NoError(t, err)
 			}
 		})
+	}
+}
+
+// TestStorageInitializerWithUserDefinedHFEnvVars tests that user-defined HF environment variables
+// don't conflict with the default HF env vars. This is a regression test for issue #4761.
+func TestStorageInitializerWithUserDefinedHFEnvVars(t *testing.T) {
+	g := gomega.NewGomegaWithT(t)
+
+	scenarios := map[string]struct {
+		original             *corev1.Pod
+		storageContainerSpec *v1alpha1.StorageContainerSpec
+		expectedEnvVars      []corev1.EnvVar
+	}{
+		"UserOverridesHFEnvVarWithValue": {
+			original: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						constants.StorageInitializerSourceUriInternalAnnotationKey: "gs://foo",
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: constants.InferenceServiceContainerName,
+						},
+					},
+				},
+			},
+			storageContainerSpec: &v1alpha1.StorageContainerSpec{
+				Container: corev1.Container{
+					Env: []corev1.EnvVar{
+						{
+							Name:  "HF_HUB_ENABLE_HF_TRANSFER",
+							Value: "0", // User overrides to disable
+						},
+					},
+				},
+			},
+			expectedEnvVars: []corev1.EnvVar{
+				{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "0"},        // User value should be preserved
+				{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},          // Default value added
+				{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"}, // Default value added
+			},
+		},
+		"UserDefinesHFEnvVarWithValueFrom": {
+			original: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						constants.StorageInitializerSourceUriInternalAnnotationKey: "gs://foo",
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: constants.InferenceServiceContainerName,
+						},
+					},
+				},
+			},
+			storageContainerSpec: &v1alpha1.StorageContainerSpec{
+				Container: corev1.Container{
+					Env: []corev1.EnvVar{
+						{
+							Name: "HF_HUB_ENABLE_HF_TRANSFER",
+							ValueFrom: &corev1.EnvVarSource{
+								ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "hf-config"},
+									Key:                  "transfer-enabled",
+								},
+							},
+						},
+					},
+				},
+			},
+			expectedEnvVars: []corev1.EnvVar{
+				{
+					Name: "HF_HUB_ENABLE_HF_TRANSFER",
+					ValueFrom: &corev1.EnvVarSource{
+						ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "hf-config"},
+							Key:                  "transfer-enabled",
+						},
+					},
+				},
+				{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+				{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
+			},
+		},
+		"NoUserDefinedHFEnvVars": {
+			original: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						constants.StorageInitializerSourceUriInternalAnnotationKey: "gs://foo",
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: constants.InferenceServiceContainerName,
+						},
+					},
+				},
+			},
+			storageContainerSpec: nil,
+			expectedEnvVars: []corev1.EnvVar{
+				{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+				{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+				{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
+			},
+		},
+	}
+
+	for name, scenario := range scenarios {
+		t.Run(name, func(t *testing.T) {
+			params := &StorageInitializerParams{
+				Namespace:            "default",
+				StorageURIs:          []v1beta1.StorageUri{{Uri: "gs://foo", MountPath: constants.DefaultModelLocalMountPath}},
+				IsReadOnly:           true,
+				IsLegacyURI:          true,
+				PodSpec:              &scenario.original.Spec,
+				CredentialBuilder:    credentials.NewCredentialBuilder(c, clientset, &corev1.ConfigMap{Data: map[string]string{}}),
+				Client:               c,
+				Config:               storageInitializerConfig,
+				IsvcAnnotations:      map[string]string{},
+				StorageSpec:          nil,
+				StorageContainerSpec: scenario.storageContainerSpec,
+			}
+
+			err := CommonStorageInitialization(t.Context(), params)
+			require.NoError(t, err)
+
+			// Find the storage-initializer init container
+			var storageInitContainer *corev1.Container
+			for i := range scenario.original.Spec.InitContainers {
+				if scenario.original.Spec.InitContainers[i].Name == constants.StorageInitializerContainerName {
+					storageInitContainer = &scenario.original.Spec.InitContainers[i]
+					break
+				}
+			}
+
+			require.NotNil(t, storageInitContainer, "storage-initializer init container should exist")
+
+			// Verify that the expected environment variables are present
+			for _, expectedEnv := range scenario.expectedEnvVars {
+				found := false
+				for _, actualEnv := range storageInitContainer.Env {
+					if actualEnv.Name == expectedEnv.Name {
+						found = true
+						// Check that the value matches
+						if expectedEnv.Value != "" {
+							g.Expect(actualEnv.Value).To(gomega.Equal(expectedEnv.Value),
+								"Env var %s should have value %s", expectedEnv.Name, expectedEnv.Value)
+							g.Expect(actualEnv.ValueFrom).To(gomega.BeNil(),
+								"Env var %s should not have ValueFrom when Value is set", expectedEnv.Name)
+						} else if expectedEnv.ValueFrom != nil {
+							g.Expect(actualEnv.ValueFrom).To(gomega.Equal(expectedEnv.ValueFrom),
+								"Env var %s should have correct ValueFrom", expectedEnv.Name)
+							g.Expect(actualEnv.Value).To(gomega.BeEmpty(),
+								"Env var %s should not have Value when ValueFrom is set", expectedEnv.Name)
+						}
+						break
+					}
+				}
+				g.Expect(found).To(gomega.BeTrue(), "Expected env var %s not found", expectedEnv.Name)
+			}
+		})
+	}
+}
+
+// TestStorageInitializerWithUserDefinedCABundleEnvVars tests that user-defined CA bundle environment variables
+// don't conflict with the default CA bundle env vars. This applies the same defensive pattern as issue #4761.
+func TestStorageInitializerWithUserDefinedCABundleEnvVars(t *testing.T) {
+	g := gomega.NewGomegaWithT(t)
+
+	scenarios := map[string]struct {
+		original             *corev1.Pod
+		storageContainerSpec *v1alpha1.StorageContainerSpec
+		storageConfig        *kserveTypes.StorageInitializerConfig
+		expectedEnvVars      []corev1.EnvVar
+	}{
+		"UserOverridesCABundleConfigMapNameWithValue": {
+			original: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						constants.StorageInitializerSourceUriInternalAnnotationKey: "gs://foo",
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: constants.InferenceServiceContainerName,
+						},
+					},
+				},
+			},
+			storageContainerSpec: &v1alpha1.StorageContainerSpec{
+				Container: corev1.Container{
+					Env: []corev1.EnvVar{
+						{
+							Name:  constants.CaBundleConfigMapNameEnvVarKey,
+							Value: "user-custom-ca-bundle",
+						},
+					},
+				},
+			},
+			storageConfig: &kserveTypes.StorageInitializerConfig{
+				CpuRequest:              StorageInitializerDefaultCPURequest,
+				CpuLimit:                StorageInitializerDefaultCPULimit,
+				MemoryRequest:           StorageInitializerDefaultMemoryRequest,
+				MemoryLimit:             StorageInitializerDefaultMemoryLimit,
+				CaBundleConfigMapName:   "default-ca-bundle",
+				CaBundleVolumeMountPath: StorageInitializerDefaultCaBundleVolumeMountPath,
+			},
+			expectedEnvVars: []corev1.EnvVar{
+				{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+				{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+				{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
+				{Name: constants.CaBundleConfigMapNameEnvVarKey, Value: "user-custom-ca-bundle"},                            // User value preserved
+				{Name: constants.CaBundleVolumeMountPathEnvVarKey, Value: StorageInitializerDefaultCaBundleVolumeMountPath}, // Default added
+			},
+		},
+		"UserDefinesCABundleEnvVarWithValueFrom": {
+			original: &corev1.Pod{
+				ObjectMeta: metav1.ObjectMeta{
+					Annotations: map[string]string{
+						constants.StorageInitializerSourceUriInternalAnnotationKey: "gs://foo",
+					},
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{
+						{
+							Name: constants.InferenceServiceContainerName,
+						},
+					},
+				},
+			},
+			storageContainerSpec: &v1alpha1.StorageContainerSpec{
+				Container: corev1.Container{
+					Env: []corev1.EnvVar{
+						{
+							Name: constants.CaBundleVolumeMountPathEnvVarKey,
+							ValueFrom: &corev1.EnvVarSource{
+								ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+									LocalObjectReference: corev1.LocalObjectReference{Name: "ca-config"},
+									Key:                  "mount-path",
+								},
+							},
+						},
+					},
+				},
+			},
+			storageConfig: &kserveTypes.StorageInitializerConfig{
+				CpuRequest:              StorageInitializerDefaultCPURequest,
+				CpuLimit:                StorageInitializerDefaultCPULimit,
+				MemoryRequest:           StorageInitializerDefaultMemoryRequest,
+				MemoryLimit:             StorageInitializerDefaultMemoryLimit,
+				CaBundleConfigMapName:   "default-ca-bundle",
+				CaBundleVolumeMountPath: StorageInitializerDefaultCaBundleVolumeMountPath,
+			},
+			expectedEnvVars: []corev1.EnvVar{
+				{Name: "HF_HUB_ENABLE_HF_TRANSFER", Value: "1"},
+				{Name: "HF_XET_HIGH_PERFORMANCE", Value: "1"},
+				{Name: "HF_XET_NUM_CONCURRENT_RANGE_GETS", Value: "8"},
+				{Name: constants.CaBundleConfigMapNameEnvVarKey, Value: constants.DefaultGlobalCaBundleConfigMapName},
+				{
+					Name: constants.CaBundleVolumeMountPathEnvVarKey,
+					ValueFrom: &corev1.EnvVarSource{
+						ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+							LocalObjectReference: corev1.LocalObjectReference{Name: "ca-config"},
+							Key:                  "mount-path",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for name, scenario := range scenarios {
+		t.Run(name, func(t *testing.T) {
+			params := &StorageInitializerParams{
+				Namespace:            "default",
+				StorageURIs:          []v1beta1.StorageUri{{Uri: "gs://foo", MountPath: constants.DefaultModelLocalMountPath}},
+				IsReadOnly:           true,
+				IsLegacyURI:          true,
+				PodSpec:              &scenario.original.Spec,
+				CredentialBuilder:    credentials.NewCredentialBuilder(c, clientset, &corev1.ConfigMap{Data: map[string]string{}}),
+				Client:               c,
+				Config:               scenario.storageConfig,
+				IsvcAnnotations:      map[string]string{},
+				StorageSpec:          nil,
+				StorageContainerSpec: scenario.storageContainerSpec,
+			}
+
+			err := CommonStorageInitialization(t.Context(), params)
+			require.NoError(t, err)
+
+			// Find the storage-initializer init container
+			var storageInitContainer *corev1.Container
+			for i := range scenario.original.Spec.InitContainers {
+				if scenario.original.Spec.InitContainers[i].Name == constants.StorageInitializerContainerName {
+					storageInitContainer = &scenario.original.Spec.InitContainers[i]
+					break
+				}
+			}
+
+			require.NotNil(t, storageInitContainer, "storage-initializer init container should exist")
+
+			// Verify that the expected environment variables are present
+			for _, expectedEnv := range scenario.expectedEnvVars {
+				found := false
+				for _, actualEnv := range storageInitContainer.Env {
+					if actualEnv.Name == expectedEnv.Name {
+						found = true
+						// Check that the value matches
+						if expectedEnv.Value != "" {
+							g.Expect(actualEnv.Value).To(gomega.Equal(expectedEnv.Value),
+								"Env var %s should have value %s", expectedEnv.Name, expectedEnv.Value)
+							g.Expect(actualEnv.ValueFrom).To(gomega.BeNil(),
+								"Env var %s should not have ValueFrom when Value is set", expectedEnv.Name)
+						} else if expectedEnv.ValueFrom != nil {
+							g.Expect(actualEnv.ValueFrom).To(gomega.Equal(expectedEnv.ValueFrom),
+								"Env var %s should have correct ValueFrom", expectedEnv.Name)
+							g.Expect(actualEnv.Value).To(gomega.BeEmpty(),
+								"Env var %s should not have Value when ValueFrom is set", expectedEnv.Name)
+						}
+						break
+					}
+				}
+				g.Expect(found).To(gomega.BeTrue(), "Expected env var %s not found", expectedEnv.Name)
+			}
+		})
+	}
+}
+
+// TestInjectModelcarMultiNode tests the multinode scenario fixes for OCI model storage
+func TestInjectModelcarMultiNode(t *testing.T) {
+	t.Run("Test InjectModelcar with worker-container only (multi-node scenario)", func(t *testing.T) {
+		pod := createTestPodForModelcarWithWorkerContainer()
+		injector := &StorageInitializerInjector{config: &kserveTypes.StorageInitializerConfig{}}
+
+		err := injector.InjectModelcar(pod)
+		require.NoError(t, err)
+
+		// Verify that modelcar was injected for worker container
+		modelcarContainer := utils.GetContainerWithName(&pod.Spec, constants.ModelcarContainerName)
+		assert.NotNil(t, modelcarContainer, "Modelcar container should be created")
+
+		workerContainer := utils.GetContainerWithName(&pod.Spec, constants.WorkerContainerName)
+		assert.NotNil(t, workerContainer, "Worker container should exist")
+
+		// Verify that worker container has the correct volume mounts
+		found := false
+		for _, mount := range workerContainer.VolumeMounts {
+			if mount.Name == constants.StorageInitializerVolumeName {
+				found = true
+				break
+			}
+		}
+		assert.True(t, found, "Worker container should have storage initializer volume mount")
+
+		// Verify that the volume was created
+		assert.Len(t, pod.Spec.Volumes, 1, "Should have exactly one volume")
+		assert.Equal(t, constants.StorageInitializerVolumeName, pod.Spec.Volumes[0].Name)
+	})
+
+	t.Run("Test InjectModelcar error when no valid container found", func(t *testing.T) {
+		pod := createTestPodForModelcarNoValidContainer()
+		injector := &StorageInitializerInjector{config: &kserveTypes.StorageInitializerConfig{}}
+
+		err := injector.InjectModelcar(pod)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "Invalid configuration: cannot find container: kserve-container")
+	})
+
+	t.Run("Test InjectModelcar prioritizes kserve-container over worker-container", func(t *testing.T) {
+		pod := createTestPodForModelcarWithBothContainers()
+		injector := &StorageInitializerInjector{config: &kserveTypes.StorageInitializerConfig{}}
+
+		err := injector.InjectModelcar(pod)
+		require.NoError(t, err)
+
+		// Both containers should have volume mounts but kserve-container should be prioritized
+		kserveContainer := utils.GetContainerWithName(&pod.Spec, constants.InferenceServiceContainerName)
+		workerContainer := utils.GetContainerWithName(&pod.Spec, constants.WorkerContainerName)
+
+		assert.NotNil(t, kserveContainer)
+		assert.NotNil(t, workerContainer)
+
+		// Check that kserve-container got the volume mount
+		kserveHasMount := false
+		for _, mount := range kserveContainer.VolumeMounts {
+			if mount.Name == constants.StorageInitializerVolumeName {
+				kserveHasMount = true
+				break
+			}
+		}
+		assert.True(t, kserveHasMount, "kserve-container should have storage initializer volume mount")
+	})
+
+	t.Run("Test InjectModelcar with transformer and worker containers", func(t *testing.T) {
+		pod := createTestPodForModelcarWithWorkerAndTransformer()
+		injector := &StorageInitializerInjector{config: &kserveTypes.StorageInitializerConfig{}}
+
+		err := injector.InjectModelcar(pod)
+		require.NoError(t, err)
+
+		// Check both worker and transformer containers got volume mounts
+		workerContainer := utils.GetContainerWithName(&pod.Spec, constants.WorkerContainerName)
+		transformerContainer := utils.GetContainerWithName(&pod.Spec, constants.TransformerContainerName)
+
+		assert.NotNil(t, workerContainer)
+		assert.NotNil(t, transformerContainer)
+
+		// Both should have volume mounts
+		workerHasMount := false
+		for _, mount := range workerContainer.VolumeMounts {
+			if mount.Name == constants.StorageInitializerVolumeName {
+				workerHasMount = true
+				break
+			}
+		}
+		assert.True(t, workerHasMount, "Worker container should have storage initializer volume mount")
+
+		transformerHasMount := false
+		for _, mount := range transformerContainer.VolumeMounts {
+			if mount.Name == constants.StorageInitializerVolumeName {
+				transformerHasMount = true
+				break
+			}
+		}
+		assert.True(t, transformerHasMount, "Transformer container should have storage initializer volume mount")
+	})
+}
+
+// Helper functions for multi-node testing
+
+func createTestPodForModelcarWithWorkerContainer() *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				constants.StorageInitializerSourceUriInternalAnnotationKey: constants.OciURIPrefix + "myrepo/mymodelimage",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Name: constants.WorkerContainerName},
+			},
+		},
+	}
+}
+
+func createTestPodForModelcarNoValidContainer() *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				constants.StorageInitializerSourceUriInternalAnnotationKey: constants.OciURIPrefix + "myrepo/mymodelimage",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Name: "some-other-container"},
+			},
+		},
+	}
+}
+
+func createTestPodForModelcarWithBothContainers() *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				constants.StorageInitializerSourceUriInternalAnnotationKey: constants.OciURIPrefix + "myrepo/mymodelimage",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Name: constants.InferenceServiceContainerName},
+				{Name: constants.WorkerContainerName},
+			},
+		},
+	}
+}
+
+func createTestPodForModelcarWithWorkerAndTransformer() *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Annotations: map[string]string{
+				constants.StorageInitializerSourceUriInternalAnnotationKey: constants.OciURIPrefix + "myrepo/mymodelimage",
+			},
+		},
+		Spec: corev1.PodSpec{
+			Containers: []corev1.Container{
+				{Name: constants.WorkerContainerName},
+				{Name: constants.TransformerContainerName},
+			},
+		},
 	}
 }

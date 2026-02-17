@@ -167,10 +167,26 @@ func (mi *StorageInitializerInjector) InjectModelcar(pod *corev1.Pod) error {
 		return nil
 	}
 
-	if err := utils.ConfigureModelcarToContainer(srcURI, &pod.Spec, constants.InferenceServiceContainerName, mi.config); err != nil {
-		return err
+	// Find the kserve-container (this is the model inference server) and worker-container
+	userContainer := utils.GetContainerWithName(&pod.Spec, constants.InferenceServiceContainerName)
+	workerContainer := utils.GetContainerWithName(&pod.Spec, constants.WorkerContainerName)
+
+	if userContainer == nil {
+		if workerContainer == nil {
+			return fmt.Errorf("Invalid configuration: cannot find container: %s", constants.InferenceServiceContainerName)
+		} else {
+			// Use worker container for multi-node scenarios
+			if err := utils.ConfigureModelcarToContainer(srcURI, &pod.Spec, constants.WorkerContainerName, mi.config); err != nil {
+				return err
+			}
+		}
+	} else {
+		if err := utils.ConfigureModelcarToContainer(srcURI, &pod.Spec, constants.InferenceServiceContainerName, mi.config); err != nil {
+			return err
+		}
 	}
 
+	// Configure modelcar for transformer container if it exists
 	if utils.GetContainerWithName(&pod.Spec, constants.TransformerContainerName) != nil {
 		return utils.ConfigureModelcarToContainer(srcURI, &pod.Spec, constants.TransformerContainerName, mi.config)
 	}
@@ -430,13 +446,18 @@ func CommonStorageInitialization(ctx context.Context, params *StorageInitializer
 		}
 
 		// Inject CA bundle configMap if caBundleConfigMapName or constants.DefaultGlobalCaBundleConfigMapName annotation is set
-		caBundleConfigMapName := params.Config.CaBundleConfigMapName
-		if ok := needCaBundleMount(caBundleConfigMapName, initContainer); ok {
+		// Store the CA bundle configuration to be applied after merge to avoid conflicts
+		var caBundleConfigMapName string
+		var caBundleVolumeMountPath string
+		var needsCABundle bool
+		if ok := needCaBundleMount(params.Config.CaBundleConfigMapName, initContainer); ok {
+			needsCABundle = true
+			caBundleConfigMapName = params.Config.CaBundleConfigMapName
 			if params.Namespace != constants.KServeNamespace {
 				caBundleConfigMapName = constants.DefaultGlobalCaBundleConfigMapName
 			}
 
-			caBundleVolumeMountPath := params.Config.CaBundleVolumeMountPath
+			caBundleVolumeMountPath = params.Config.CaBundleVolumeMountPath
 			if caBundleVolumeMountPath == "" {
 				caBundleVolumeMountPath = constants.DefaultCaBundleVolumeMountPath
 			}
@@ -449,16 +470,44 @@ func CommonStorageInitialization(ctx context.Context, params *StorageInitializer
 					caBundleVolumeMountPath = filepath.Dir(envVar.Value)
 				}
 			}
+		}
 
-			initContainer.Env = append(initContainer.Env, corev1.EnvVar{
-				Name:  constants.CaBundleConfigMapNameEnvVarKey,
-				Value: caBundleConfigMapName,
-			})
+		// Merge any customizations from the storage container spec into the init container
+		if params.StorageContainerSpec != nil {
+			err := mergeContainerSpecs(initContainer, &params.StorageContainerSpec.Container)
+			if err != nil {
+				return err
+			}
+		}
 
-			initContainer.Env = append(initContainer.Env, corev1.EnvVar{
-				Name:  constants.CaBundleVolumeMountPathEnvVarKey,
-				Value: caBundleVolumeMountPath,
-			})
+		// Add CA bundle env vars and volume mount after merge to avoid conflicts with user-defined env vars
+		// This applies the same defensive pattern as HF env vars (issue #4761)
+		if needsCABundle {
+			// Only add CA bundle env vars if they don't already exist (could be customized by user)
+			caBundleEnvVarExists := false
+			caBundleMountPathEnvVarExists := false
+			for _, envVar := range initContainer.Env {
+				if envVar.Name == constants.CaBundleConfigMapNameEnvVarKey {
+					caBundleEnvVarExists = true
+				}
+				if envVar.Name == constants.CaBundleVolumeMountPathEnvVarKey {
+					caBundleMountPathEnvVarExists = true
+				}
+			}
+
+			if !caBundleEnvVarExists {
+				initContainer.Env = append(initContainer.Env, corev1.EnvVar{
+					Name:  constants.CaBundleConfigMapNameEnvVarKey,
+					Value: caBundleConfigMapName,
+				})
+			}
+
+			if !caBundleMountPathEnvVarExists {
+				initContainer.Env = append(initContainer.Env, corev1.EnvVar{
+					Name:  constants.CaBundleVolumeMountPathEnvVarKey,
+					Value: caBundleVolumeMountPath,
+				})
+			}
 
 			caBundleVolume := corev1.Volume{
 				Name: CaBundleVolumeName,
@@ -481,13 +530,10 @@ func CommonStorageInitialization(ctx context.Context, params *StorageInitializer
 			initContainer.VolumeMounts = append(initContainer.VolumeMounts, caBundleVolumeMount)
 		}
 
-		// Merge any customizations from the storage container spec into the init container
-		if params.StorageContainerSpec != nil {
-			err := mergeContainerSpecs(initContainer, &params.StorageContainerSpec.Container)
-			if err != nil {
-				return err
-			}
-		}
+		// Add default HuggingFace optimization environment variables if they don't already exist.
+		// This is done after merging to avoid conflicts with user-defined environment variables.
+		// See https://github.com/kserve/kserve/issues/4761
+		utils.AddDefaultHuggingFaceEnvVars(initContainer)
 	}
 
 	return nil
