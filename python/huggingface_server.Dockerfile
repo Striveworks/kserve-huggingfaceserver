@@ -101,6 +101,7 @@ RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd 
 RUN pip install "setuptools>=78.1.1"
 RUN pip install "urllib3>=2.5.0" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.12.14"
 RUN pip install "h11>=0.16.0" "pillow>=11.3.0"
+RUN pip install --upgrade "cbor2" "filelock" "urllib3"
 RUN pip uninstall -y ray && pip install --upgrade pip
 
 # Use Bash with `-o pipefail` so we can leverage Bash-specific features (like `[[ … ]]` for glob tests)
@@ -156,6 +157,9 @@ RUN dnf update -y \
     && dnf install -y --allowerasing sqlite-libs expat shadow-utils \
     && dnf clean all && rm -rf /var/cache/dnf
 
+# CVE fixes
+RUN dnf update -y python3.x86_64 python3-libs.x86_64 binutils.x86_64 binutils-gold.x86_64 tar \
+    && dnf clean all && rm -rf /var/cache/dnf
 
 ARG VENV_PATH
 # Activate virtual env by setting VIRTUAL_ENV
@@ -209,10 +213,6 @@ RUN sed -i 's/DEST=\/etc\/pki\/ca-trust\/extracted/DEST=\/etc\/ssl/g' /usr/bin/u
     ln -s /usr/share/pki/ca-trust-source/anchors /usr/local/share/ca-certificates && \
     chown $STRIVE_UID -R /usr/local/share/ca-certificates && chmod a+rwx -R /usr/local/share/ca-certificates && \
     ln -s /etc/ssl/pem/tls-ca-bundle.pem /etc/ssl/certs/ca-certificates.crt
-
-RUN /kserve-workspace/prod_venv/bin/pip --version && \
-    /kserve-workspace/prod_venv/bin/pip install --upgrade pip && \
-    /kserve-workspace/prod_venv/bin/pip --version
 
 USER 1000
 ENV PYTHONPATH=${WORKSPACE_DIR}/huggingfaceserver
