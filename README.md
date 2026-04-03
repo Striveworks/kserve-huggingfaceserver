@@ -43,7 +43,6 @@ To update the vLLM version, edit  the following files:
 
 ```
 python/huggingface_server.Dockerfile # (VLLM_VERSION arg)
-python/huggingfaceserver/pyproject.toml
 python/kserve/pyproject.toml
 ```
 

@@ -52,7 +52,7 @@ WORKDIR ${WORKSPACE_DIR}
 FROM base AS build
 
 ARG WORKSPACE_DIR
-ARG VLLM_VERSION=0.13.0
+ARG VLLM_VERSION=0.15.1
 ARG LMCACHE_VERSION=0.3.0
 ARG BITSANDBYTES_VERSION=0.46.1
 ARG FLASHINFER_VERSION=0.2.6.post1
@@ -71,12 +71,13 @@ ENV PATH="${WORKSPACE_DIR}/${VENV_PATH}/bin:$PATH"
 
 # From this point, all Python packages will be installed in the virtual environment and copied to the final image
 
+COPY storage/pyproject.toml storage/uv.lock storage/
+
 COPY kserve/pyproject.toml kserve/uv.lock kserve/
 RUN --mount=type=cache,target=/root/.cache/uv cd kserve && uv sync --active --no-cache
 COPY kserve kserve
 RUN --mount=type=cache,target=/root/.cache/uv cd kserve && uv sync --active --no-cache
 
-COPY storage/pyproject.toml storage/uv.lock storage/
 RUN --mount=type=cache,target=/root/.cache/uv cd storage && uv sync --active --no-cache
 COPY storage storage
 RUN --mount=type=cache,target=/root/.cache/uv cd storage && uv pip install . --no-cache
@@ -85,6 +86,9 @@ COPY huggingfaceserver/pyproject.toml huggingfaceserver/uv.lock huggingfaceserve
 RUN --mount=type=cache,target=/root/.cache/uv cd huggingfaceserver && uv sync --active --no-cache
 COPY huggingfaceserver huggingfaceserver
 RUN --mount=type=cache,target=/root/.cache/uv cd huggingfaceserver && uv sync --active --no-cache
+
+# Remove .venv directories created by uv sync — prod uses prod_venv, not these
+RUN rm -rf kserve/.venv storage/.venv huggingfaceserver/.venv
 
 # Install vllm
 # https://docs.vllm.ai/en/latest/models/extensions/runai_model_streamer.html, https://docs.vllm.ai/en/latest/models/extensions/tensorizer.html
@@ -97,13 +101,21 @@ RUN --mount=type=cache,target=/root/.cache/pip pip install vllm[runai,tensorizer
 # Install bits and bytes from source (so it uses TORCH_CUDA_ARCH_LIST)
 RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd bitsandbytes/ && cmake -DCOMPUTE_BACKEND=cuda -S . && make && pip install .
 
+
 ####################################
 # Fix CVE
-RUN pip install "setuptools>=78.1.1"
-RUN pip install "urllib3>=2.5.0" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.12.14"
+RUN pip install "pip>=25.3" "setuptools>=78.1.1" "wheel>=0.46.2"
+RUN pip install "urllib3>=2.6.3" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.13.3"
 RUN pip install "h11>=0.16.0" "pillow>=11.3.0"
-RUN pip install --upgrade "cbor2" "filelock" "urllib3"
-RUN pip uninstall -y ray && pip install --upgrade pip
+# Workaround for https://github.com/opencv/opencv-python/issues/1191 (FIPS compatibility)
+RUN pip install "opencv-python-headless<4.13"
+RUN pip install --upgrade "cbor2" "filelock"
+RUN pip install "azure-core>=1.38.0" "jaraco.context>=6.1.0"
+RUN pip install "orjson>=3.11.6" "pyasn1>=0.6.3" "PyJWT>=2.12.0" "sentencepiece>=0.2.1"
+RUN pip install "Werkzeug>=3.1.6" "xgrammar>=0.1.32" "grpcio>=1.79.3"
+RUN pip install "fastapi>=0.115.3"
+RUN pip uninstall -y ray black flask \
+    && find ${VIRTUAL_ENV}/lib -path "*/site-packages/ray" -maxdepth 3 -type d -exec rm -rf {} +
 
 # Use Bash with `-o pipefail` so we can leverage Bash-specific features (like `[[ … ]]` for glob tests)
 # and ensure that failures in any part of a piped command cause the build to fail immediately.
@@ -137,6 +149,7 @@ ARG WORKSPACE_DIR
 ARG CUDA_VERSION=12.9.1
 ARG PYTHON_VERSION=3.12
 ENV DEBIAN_FRONTEND=noninteractive
+ENV BNB_CUDA_VERSION=129
 
 WORKDIR ${WORKSPACE_DIR}
 
@@ -160,6 +173,7 @@ RUN dnf update -y \
 
 # CVE fixes
 RUN dnf update -y python3.x86_64 python3-libs.x86_64 binutils.x86_64 binutils-gold.x86_64 tar \
+    gnutls expat \
     && dnf clean all && rm -rf /var/cache/dnf
 
 ARG VENV_PATH
