@@ -52,7 +52,7 @@ WORKDIR ${WORKSPACE_DIR}
 FROM base AS build
 
 ARG WORKSPACE_DIR
-ARG VLLM_VERSION=0.17.0
+ARG VLLM_VERSION=0.19.0
 ARG LMCACHE_VERSION=0.3.0
 ARG BITSANDBYTES_VERSION=0.46.1
 ARG FLASHINFER_VERSION=0.2.6.post1
@@ -105,7 +105,7 @@ RUN git clone https://github.com/bitsandbytes-foundation/bitsandbytes.git && cd 
 ####################################
 # Fix CVE
 RUN pip install "pip>=25.3" "setuptools>=78.1.1" "wheel>=0.46.2"
-RUN pip install "urllib3>=2.6.3" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.13.3"
+RUN pip install "urllib3>=2.6.3" "requests>=2.32.4" "starlette>=0.49.1" "aiohttp>=3.13.4"
 RUN pip install "h11>=0.16.0" "pillow>=11.3.0"
 # Workaround for https://github.com/opencv/opencv-python/issues/1191 (FIPS compatibility)
 RUN pip install "opencv-python-headless<4.13"
